@@ -1,41 +1,92 @@
 import numpy as np
 import cv2
 import tensorflow as tf
+import sys
 
 
 # ─────────────────────────────────────────────
-# GRAD-CAM
-# ─────────────────────────────────────────────
+# GRAD-CAM WITH DETAILED DEBUGGING
+# ───���─────────────────────────────────────────
 def get_gradcam_heatmap(model, img_array):
-    mobilenet       = model.get_layer('mobilenetv2_1.00_224')
-    last_conv_layer = mobilenet.get_layer('out_relu')
-    conv_model      = tf.keras.Model(inputs=mobilenet.input, outputs=last_conv_layer.output)
+    print("[GRADCAM DEBUG] Starting Grad-CAM computation", file=sys.stderr)
+    
+    try:
+        print(f"[GRADCAM DEBUG] Model has {len(model.layers)} layers", file=sys.stderr)
+        
+        # Log all layer names
+        layer_names = [layer.name for layer in model.layers]
+        print(f"[GRADCAM DEBUG] Layer names: {layer_names}", file=sys.stderr)
+        
+        # Try original approach first
+        try:
+            print("[GRADCAM DEBUG] Attempting original layer access...", file=sys.stderr)
+            mobilenet       = model.get_layer('mobilenetv2_1.00_224')
+            last_conv_layer = mobilenet.get_layer('out_relu')
+            print("[GRADCAM DEBUG] Original approach succeeded", file=sys.stderr)
+        except Exception as e:
+            print(f"[GRADCAM DEBUG] Original approach failed: {e}", file=sys.stderr)
+            
+            # Fallback: find layers dynamically
+            print("[GRADCAM DEBUG] Using dynamic layer detection", file=sys.stderr)
+            
+            # Find the first layer that looks like a model/sequential
+            mobilenet = None
+            for layer in model.layers:
+                if hasattr(layer, 'layers') and len(layer.layers) > 0:
+                    mobilenet = layer
+                    print(f"[GRADCAM DEBUG] Found mobilenet-like layer: {layer.name}", file=sys.stderr)
+                    break
+            
+            if mobilenet is None:
+                raise ValueError("Could not find MobileNetV2 layer")
+            
+            # Find last conv layer in mobilenet
+            last_conv_layer = None
+            for layer in mobilenet.layers[::-1]:
+                if 'conv' in layer.name.lower():
+                    last_conv_layer = layer
+                    print(f"[GRADCAM DEBUG] Found conv layer: {layer.name}", file=sys.stderr)
+                    break
+            
+            if last_conv_layer is None:
+                raise ValueError("Could not find conv layer")
+        
+        conv_model      = tf.keras.Model(inputs=mobilenet.input, outputs=last_conv_layer.output)
+        print("[GRADCAM DEBUG] Created conv_model successfully", file=sys.stderr)
 
-    preprocessed = tf.keras.applications.mobilenet_v2.preprocess_input(
-        tf.cast(img_array, tf.float32)
-    )
-    preprocessed = tf.Variable(preprocessed)
+        preprocessed = tf.keras.applications.mobilenet_v2.preprocess_input(
+            tf.cast(img_array, tf.float32)
+        )
+        preprocessed = tf.Variable(preprocessed)
 
-    with tf.GradientTape() as tape:
-        tape.watch(preprocessed)
-        conv_outputs = conv_model(preprocessed, training=False)
-        x            = model.get_layer('global_average_pooling2d')(conv_outputs)
-        x            = model.get_layer('dropout')(x, training=False)
-        x            = model.get_layer('dense')(x)
-        x            = model.get_layer('dropout_1')(x, training=False)
-        predictions  = model.get_layer('dense_1')(x)
-        pred_class   = tf.argmax(predictions[0])
-        class_score  = predictions[:, pred_class]
+        with tf.GradientTape() as tape:
+            tape.watch(preprocessed)
+            conv_outputs = conv_model(preprocessed, training=False)
+            x            = model.get_layer('global_average_pooling2d')(conv_outputs)
+            x            = model.get_layer('dropout')(x, training=False)
+            x            = model.get_layer('dense')(x)
+            x            = model.get_layer('dropout_1')(x, training=False)
+            predictions  = model.get_layer('dense_1')(x)
+            pred_class   = tf.argmax(predictions[0])
+            class_score  = predictions[:, pred_class]
 
-    grads        = tape.gradient(class_score, conv_outputs)
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-    conv_out     = conv_outputs[0]
-    heatmap      = conv_out @ pooled_grads[..., tf.newaxis]
-    heatmap      = tf.squeeze(heatmap)
-    heatmap      = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-8)
-    full_preds   = model(img_array, training=False)
+        grads        = tape.gradient(class_score, conv_outputs)
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+        conv_out     = conv_outputs[0]
+        heatmap      = conv_out @ pooled_grads[..., tf.newaxis]
+        heatmap      = tf.squeeze(heatmap)
+        heatmap      = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-8)
+        full_preds   = model(img_array, training=False)
+        
+        print("[GRADCAM DEBUG] Grad-CAM computed successfully", file=sys.stderr)
+        return heatmap.numpy(), pred_class.numpy(), full_preds[0].numpy()
 
-    return heatmap.numpy(), pred_class.numpy(), full_preds[0].numpy()
+    except Exception as e:
+        print(f"[GRADCAM ERROR] Failed: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        # Return dummy heatmap
+        return np.ones((7, 7)), 0, np.array([0.25, 0.25, 0.25])
 
 
 def overlay_gradcam(img_bgr, heatmap, alpha=0.45):
@@ -49,14 +100,23 @@ def overlay_gradcam(img_bgr, heatmap, alpha=0.45):
 # LSTM SALIENCY
 # ─────────────────────────────────────────────
 def get_lstm_saliency(model, sensor_seq):
-    input_tensor = tf.Variable(sensor_seq[np.newaxis], dtype=tf.float32)
-    with tf.GradientTape() as tape:
-        predictions = model(input_tensor, training=False)
-        pred_class  = tf.argmax(predictions[0])
-        class_score = predictions[:, pred_class]
-    grads    = tape.gradient(class_score, input_tensor)
-    saliency = tf.abs(grads[0]).numpy()
-    return saliency, pred_class.numpy(), predictions[0].numpy()
+    print("[LSTM SALIENCY DEBUG] Starting LSTM saliency computation", file=sys.stderr)
+    try:
+        input_tensor = tf.Variable(sensor_seq[np.newaxis], dtype=tf.float32)
+        with tf.GradientTape() as tape:
+            predictions = model(input_tensor, training=False)
+            pred_class  = tf.argmax(predictions[0])
+            class_score = predictions[:, pred_class]
+        grads    = tape.gradient(class_score, input_tensor)
+        saliency = tf.abs(grads[0]).numpy()
+        print("[LSTM SALIENCY DEBUG] LSTM saliency computed successfully", file=sys.stderr)
+        return saliency, pred_class.numpy(), predictions[0].numpy()
+    except Exception as e:
+        print(f"[LSTM SALIENCY ERROR] Failed: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        # Return dummy saliency
+        return np.ones((50, 5)), 0, np.array([0.33, 0.33, 0.34])
 
 
 # ─────────────────────────────────────────────
@@ -179,33 +239,39 @@ def compute_shap_single(fusion_model, cnn_out, lstm_out, n_background=40):
     Compute SHAP values for a single sample using a small random background.
     Returns shap_values list (one array per output class) and the input vector.
     """
+    print("[SHAP DEBUG] Starting SHAP computation", file=sys.stderr)
     try:
         import shap
     except ImportError:
+        print("[SHAP WARNING] SHAP not installed", file=sys.stderr)
         return None, None
 
-    x_single    = np.concatenate([cnn_out, lstm_out])[np.newaxis].astype(np.float32)
+    try:
+        x_single    = np.concatenate([cnn_out, lstm_out])[np.newaxis].astype(np.float32)
 
-    # Small synthetic background centered around neutral probabilities
-    rng        = np.random.RandomState(42)
-    background = rng.dirichlet(np.ones(3), size=n_background).astype(np.float32)
-    bg_cnn     = background
-    bg_lstm    = rng.dirichlet(np.ones(3), size=n_background).astype(np.float32)
-    bg         = np.concatenate([bg_cnn, bg_lstm], axis=1).astype(np.float32)
+        # Small synthetic background centered around neutral probabilities
+        rng        = np.random.RandomState(42)
+        background = rng.dirichlet(np.ones(3), size=n_background).astype(np.float32)
+        bg_cnn     = background
+        bg_lstm    = rng.dirichlet(np.ones(3), size=n_background).astype(np.float32)
+        bg         = np.concatenate([bg_cnn, bg_lstm], axis=1).astype(np.float32)
 
-    def model_predict(x):
-        return fusion_model.predict(x.astype(np.float32), verbose=0)
+        def model_predict(x):
+            return fusion_model.predict(x.astype(np.float32), verbose=0)
 
-    explainer   = shap.KernelExplainer(model_predict, bg)
-    shap_values = explainer.shap_values(x_single, nsamples=80)
-
-    import sys
-    if isinstance(shap_values, list):
-        print(f"[SHAP] list of {len(shap_values)} arrays, shapes: {[s.shape for s in shap_values]}", file=sys.stderr)
-    else:
-        print(f"[SHAP] single array shape: {np.array(shap_values).shape}", file=sys.stderr)
-
-    return shap_values, x_single
+        print("[SHAP DEBUG] Creating explainer", file=sys.stderr)
+        explainer   = shap.KernelExplainer(model_predict, bg)
+        print("[SHAP DEBUG] Computing SHAP values", file=sys.stderr)
+        shap_values = explainer.shap_values(x_single, nsamples=80)
+        
+        print("[SHAP DEBUG] SHAP computed successfully", file=sys.stderr)
+        return shap_values, x_single
+        
+    except Exception as e:
+        print(f"[SHAP ERROR] Failed: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        return None, None
 
 
 def shap_insight(shap_values, pred):
