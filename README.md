@@ -14,27 +14,27 @@ The core insight is that **neither visual inspection nor sensor monitoring alone
 
 ## Live Demo
 
-👉 https://coatingsense.streamlit.app/
+https://coatingsense.streamlit.app/
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ### Dashboard
-![Dashboard](assets/dashboard.png)
+<img src="assets/Dashboard.png" width="100%"/>
 
 ---
 
 ### Model Results
-<img src="assets/Results I.png" width="45%"/>
-<img src="assets/results II.png" width="45%"/>
+<img src="assets/Results_1.png" width="100%"/>
+<img src="assets/results_2.png" width="100%"/>
 
 ---
 
 ### Explainability
-<img src="assets/explainability I.png" width="32%"/>
-<img src="assets/explainability II.png" width="32%"/>
-<img src="assets/explainability III.png" width="32%"/>
+<img src="assets/explainability_1.png" width="100%"/>
+<img src="assets/explainability_2.png" width="100%"/>
+<img src="assets/explainability_3.png" width="100%"/>
 
 ---
 
