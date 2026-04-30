@@ -12,6 +12,32 @@ The core insight is that **neither visual inspection nor sensor monitoring alone
 
 ---
 
+## Live Demo
+
+👉 https://coatingsense.streamlit.app/
+
+---
+
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](assets/dashboard.png)
+
+---
+
+### Model Results
+<img src="assets/Results I.png" width="45%"/>
+<img src="assets/results II.png" width="45%"/>
+
+---
+
+### Explainability
+<img src="assets/explainability I.png" width="32%"/>
+<img src="assets/explainability II.png" width="32%"/>
+<img src="assets/explainability III.png" width="32%"/>
+
+---
+
 ## System Status Levels
 
 | Status | Condition | Action |
