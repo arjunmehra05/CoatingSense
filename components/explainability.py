@@ -4,9 +4,9 @@ import tensorflow as tf
 import sys
 
 
-# ─────────────────────────────────────────────
+# ────────────────────────────────────────────
 # GRAD-CAM WITH DETAILED DEBUGGING
-# ───���─────────────────────────────────────────
+# ────────────────────────────────────────────
 def get_gradcam_heatmap(model, img_array):
     print("[GRADCAM DEBUG] Starting Grad-CAM computation", file=sys.stderr)
     

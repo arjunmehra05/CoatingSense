@@ -457,7 +457,7 @@ with tab_results:
         col_img, col_sensor = st.columns([1, 2])
         with col_img:
             st.markdown('<div class="section-label">Coating Image</div>', unsafe_allow_html=True)
-            st.image(cv2.cvtColor(r['img'], cv2.COLOR_BGR2RGB), use_container_width=True)
+            st.image(cv2.cvtColor(r['img'], cv2.COLOR_BGR2RGB), use_column_width=True)
             st.markdown(f"""
             <div class="card">
                 <div class="card-label">Coating State</div>
