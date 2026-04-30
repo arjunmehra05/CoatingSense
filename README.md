@@ -23,20 +23,14 @@ https://coatingsense.streamlit.app/
 ### Dashboard
 <img src="assets/Dashboard.png" width="100%"/>
 
----
-
 ### Model Results
 <img src="assets/Results_1.png" width="100%"/>
-<img src="assets/results_2.png" width="100%"/>
-
----
+<img src="assets/Results_2.png" width="100%"/>
 
 ### Explainability
-<img src="assets/explainability_1.png" width="100%"/>
-<img src="assets/explainability_2.png" width="100%"/>
-<img src="assets/explainability_3.png" width="100%"/>
-
----
+<img src="assets/Explainability_1.png" width="100%"/>
+<img src="assets/Explainability_2.png" width="100%"/>
+<img src="assets/Explainability_3.png" width="100%"/>
 
 ## System Status Levels
 
