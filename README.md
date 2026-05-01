@@ -14,9 +14,10 @@ The core insight is that **neither visual inspection nor sensor monitoring alone
 
 ## Live Demo
 
-https://coatingsense.streamlit.app/
+> https://coatingsense.streamlit.app/
 
-Note: The app may take ~10–30 seconds to load on first open (cold start on free hosting).
+*Note: The app may take ~10–30 seconds to load on first open (cold start on free hosting).*
+
 ---
 
 ## Screenshots
@@ -161,12 +162,14 @@ CoatingSense/
 │   ├── lstm_model.keras
 │   ├── fusion_model.keras
 │   └── README.md
+│
 ├── training/                       # Training scripts (optional use)
 │
 │   ├── data_generation.py
 │   ├── cnn_training.py
 │   ├── lstm_training.py
 │   └── fusion+demo.py
+│
 ├── data/                           # Generated synthetic data (not included)
 │
 ├── requirements.txt                
