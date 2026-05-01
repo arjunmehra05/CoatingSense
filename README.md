@@ -16,7 +16,7 @@ The core insight is that **neither visual inspection nor sensor monitoring alone
 
 > https://coatingsense.streamlit.app/
 
-*Note: The app may take ~10–30 seconds to load on first open (cold start on free hosting).*
+*Note: The app may take ~10-30 seconds to load on first open (cold start on free hosting).*
 
 ---
 
