@@ -16,6 +16,7 @@ The core insight is that **neither visual inspection nor sensor monitoring alone
 
 https://coatingsense.streamlit.app/
 
+Note: The app may take ~10–30 seconds to load on first open (cold start on free hosting).
 ---
 
 ## Screenshots
@@ -137,27 +138,43 @@ All models trained on synthetic data with 1000 samples per class.
 
 ```
 CoatingSense/
-├── app.py                        # Main Streamlit application
-├── components/
+│
+├── app.py                          # Main Streamlit app
+│
+├── assets/                         # Screenshots for README
+│   ├── dashboard.png
+│   ├── results_1.png
+│   ├── results_2.png
+│   ├── explainability_1.png
+│   ├── explainability_2.png
+│   └── explainability_3.png
+│
+├── components/                     # Core logic modules
 │   ├── __init__.py
-│   ├── generators.py             # Synthetic image and sensor data generation
-│   ├── models.py                 # Model loading and inference
-│   ├── explainability.py         # Grad-CAM, saliency, SHAP, insight text
-│   └── charts.py                 # All matplotlib chart functions
-├── models/
-│   ├── cnn_README.md             # Instructions for CNN model
-│   ├── lstm_README.md            # Instructions for LSTM model
-│   └── fusion_README.md          # Instructions for Fusion model
-├── training/
-│   ├── data_generation.py        # Generate synthetic dataset
-│   ├── cnn_training.py           # Train CNN model
-│   ├── lstm_training.py          # Train LSTM model
-│   └── fusion+demo.py            # Train Fusion model
-├── data/                         # Generated synthetic data (not included)
-├── requirements.txt
+│   ├── models.py                   # Model loading + inference
+│   ├── generators.py               # Synthetic data generation
+│   ├── explainability.py           # Grad-CAM, SHAP, saliency
+│   └── charts.py                   # Visualization utilities
+│
+├── models/                         # Pre-trained models
+│   ├── cnn_model.keras
+│   ├── lstm_model.keras
+│   ├── fusion_model.keras
+│   └── README.md
+├── training/                       # Training scripts (optional use)
+│
+│   ├── data_generation.py
+│   ├── cnn_training.py
+│   ├── lstm_training.py
+│   └── fusion+demo.py
+├── data/                           # Generated synthetic data (not included)
+│
+├── requirements.txt                
+├── README.md                       # Project documentation
 ├── LICENSE
 ├── .gitignore
-└── README.md
+│
+└── .venv/                          # Local environment (NOT pushed)
 ```
 
 ---
